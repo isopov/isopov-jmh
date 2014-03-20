@@ -13,7 +13,7 @@ import org.openjdk.jmh.runner.options.Options;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
 
 @State(Scope.Thread)
-public class ArrayCopy {
+public class ArrayCopyBenchmark {
 
     int[] state = new int[7654231];
     {
@@ -43,7 +43,7 @@ public class ArrayCopy {
 
     public static void main(String[] args) throws RunnerException {
         Options opt = new OptionsBuilder()
-                .include(".*" + ArrayCopy.class.getSimpleName() + ".*")
+                .include(".*" + ArrayCopyBenchmark.class.getSimpleName() + ".*")
                 .warmupIterations(5)
                 .measurementIterations(5)
                 .forks(3)

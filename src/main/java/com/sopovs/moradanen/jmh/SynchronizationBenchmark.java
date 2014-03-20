@@ -16,7 +16,7 @@ import org.openjdk.jmh.runner.options.OptionsBuilder;
 
 @OutputTimeUnit(TimeUnit.MILLISECONDS)
 @State(Scope.Benchmark)
-public class SynchronizationBenchmarkTest {
+public class SynchronizationBenchmark {
 
     @State(Scope.Benchmark)
     public static class SharedSynchronized {
@@ -41,7 +41,7 @@ public class SynchronizationBenchmarkTest {
 
     public static void main(String[] args) throws RunnerException {
         Options opt = new OptionsBuilder()
-                .include(".*" + SynchronizationBenchmarkTest.class.getSimpleName() + ".*")
+                .include(".*" + SynchronizationBenchmark.class.getSimpleName() + ".*")
                 .warmupIterations(5)
                 .measurementIterations(5)
                 .forks(3)

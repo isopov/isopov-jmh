@@ -2,11 +2,11 @@ package com.sopovs.moradanen.jmh;
 
 import org.junit.Test;
 
-public class ArrayCopyTest {
+public class ArrayCopyBenchmarkTest {
 
     @Test
     public void test() {
-        ArrayCopy bench = new ArrayCopy();
+        ArrayCopyBenchmark bench = new ArrayCopyBenchmark();
         int[] loopcopy = bench.loopcopy();
         int[] systemcopy = bench.systemcopy();
         if (loopcopy.length != systemcopy.length) {

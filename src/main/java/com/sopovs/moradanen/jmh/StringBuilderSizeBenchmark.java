@@ -15,7 +15,7 @@ import java.util.concurrent.TimeUnit;
  * Created by isopov on 2/24/14.
  */
 @OutputTimeUnit(TimeUnit.NANOSECONDS)
-public class StringBuilderSize {
+public class StringBuilderSizeBenchmark {
 
 
     @GenerateMicroBenchmark
@@ -41,7 +41,7 @@ public class StringBuilderSize {
 
     public static void main(String[] args) throws RunnerException {
         Options opt = new OptionsBuilder()
-                .include(".*" + StringBuilderSize.class.getSimpleName() + ".*")
+                .include(".*" + StringBuilderSizeBenchmark.class.getSimpleName() + ".*")
                 .warmupIterations(5)
                 .measurementIterations(5)
                 .forks(3)
