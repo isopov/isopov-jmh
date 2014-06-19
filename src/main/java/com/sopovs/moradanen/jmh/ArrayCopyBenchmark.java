@@ -3,7 +3,7 @@ package com.sopovs.moradanen.jmh;
 import java.util.Random;
 
 import org.openjdk.jmh.annotations.BenchmarkMode;
-import org.openjdk.jmh.annotations.GenerateMicroBenchmark;
+import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.Mode;
 import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.State;
@@ -23,7 +23,7 @@ public class ArrayCopyBenchmark {
         }
     }
 
-    @GenerateMicroBenchmark
+    @Benchmark
     @BenchmarkMode({ Mode.AverageTime, Mode.SampleTime, Mode.SingleShotTime })
     public int[] loopcopy() {
         int[] result = new int[1234567];
@@ -33,7 +33,7 @@ public class ArrayCopyBenchmark {
         return result;
     }
 
-    @GenerateMicroBenchmark
+    @Benchmark
     @BenchmarkMode({ Mode.AverageTime, Mode.SampleTime, Mode.SingleShotTime })
     public int[] systemcopy() {
         int[] result = new int[1234567];

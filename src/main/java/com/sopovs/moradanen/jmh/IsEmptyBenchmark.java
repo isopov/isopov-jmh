@@ -3,7 +3,7 @@ package com.sopovs.moradanen.jmh;
 import com.google.common.collect.ImmutableMap;
 import javolution.util.FastMap;
 import org.openjdk.jmh.annotations.BenchmarkMode;
-import org.openjdk.jmh.annotations.GenerateMicroBenchmark;
+import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.Mode;
 import org.openjdk.jmh.annotations.OutputTimeUnit;
 import org.openjdk.jmh.annotations.Scope;
@@ -52,63 +52,63 @@ public class IsEmptyBenchmark {
 		immutableMap = ImmutableMap.copyOf(fastMap);
 	}
 
-	@GenerateMicroBenchmark
+	@Benchmark
 	public boolean isEmptyFastMapFalse() {
 		return fastMap.isEmpty();
 	}
 
-	@GenerateMicroBenchmark
+	@Benchmark
 	public boolean isEmptyFastMapTrue() {
 		return emptyFastMap.isEmpty();
 	}
 
-	@GenerateMicroBenchmark
+	@Benchmark
 	public boolean isEmptyConcurrentHashMapFalse() {
 		return concurrentHashMap.isEmpty();
 	}
 
-	@GenerateMicroBenchmark
+	@Benchmark
 	public boolean isEmptyConcurrentHashMapTrue() {
 		return emptyConcurrentHashMap.isEmpty();
 	}
 
-	@GenerateMicroBenchmark
+	@Benchmark
 	public boolean isEmptyImmutableMaFalse() {
 		return immutableMap.isEmpty();
 	}
 
-	@GenerateMicroBenchmark
+	@Benchmark
 	public boolean isEmptyImmutableMapTrue() {
 		return emptyImmutableMap.isEmpty();
 	}
 
 
-	@GenerateMicroBenchmark
+	@Benchmark
 	public boolean isZeroSizeFastMapFalse() {
 		return fastMap.size() == 0;
 	}
 
-	@GenerateMicroBenchmark
+	@Benchmark
 	public boolean isZeroSizeFastMapTrue() {
 		return emptyFastMap.size() == 0;
 	}
 
-	@GenerateMicroBenchmark
+	@Benchmark
 	public boolean isZeroSizeConcurrentHashMapFalse() {
 		return concurrentHashMap.size() == 0;
 	}
 
-	@GenerateMicroBenchmark
+	@Benchmark
 	public boolean isZeroSizeConcurrentHashMapTrue() {
 		return emptyConcurrentHashMap.size() == 0;
 	}
 
-	@GenerateMicroBenchmark
+	@Benchmark
 	public boolean isZeroSizeImmutableMaFalse() {
 		return immutableMap.size() == 0;
 	}
 
-	@GenerateMicroBenchmark
+	@Benchmark
 	public boolean isZeroSizeImmutableMapTrue() {
 		return emptyImmutableMap.size() == 0;
 	}

@@ -7,7 +7,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.openjdk.jmh.annotations.CompilerControl;
-import org.openjdk.jmh.annotations.GenerateMicroBenchmark;
+import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.runner.Runner;
 import org.openjdk.jmh.runner.RunnerException;
 import org.openjdk.jmh.runner.options.Options;
@@ -20,7 +20,7 @@ import com.google.common.collect.UnmodifiableIterator;
 
 public class MapsBenchmark {
 
-    @GenerateMicroBenchmark
+    @Benchmark
     public Iterator<Entry<Object, Object>> emptyCollectionsMap() {
         return newEmptyCollectionsMap().entrySet().iterator();
     }
@@ -30,7 +30,7 @@ public class MapsBenchmark {
         return Collections.emptyMap();
     }
 
-    @GenerateMicroBenchmark
+    @Benchmark
     public Iterator<Entry<String, String>> emptyHashMap() {
         return newEmptyHashMap().entrySet().iterator();
     }
@@ -40,7 +40,7 @@ public class MapsBenchmark {
         return new HashMap<String, String>();
     }
 
-    @GenerateMicroBenchmark
+    @Benchmark
     public UnmodifiableIterator<Entry<Object, Object>> emptyImmutableMap() {
         return newEmptyImmutableMap().entrySet().iterator();
     }
@@ -50,7 +50,7 @@ public class MapsBenchmark {
         return ImmutableMap.of();
     }
 
-    @GenerateMicroBenchmark
+    @Benchmark
     public Iterator<Entry<String, String>> singletonCollectionsMap() {
         return newSingletonMap().entrySet().iterator();
     }
@@ -60,7 +60,7 @@ public class MapsBenchmark {
         return Collections.singletonMap("foo1", "bar1");
     }
 
-    @GenerateMicroBenchmark
+    @Benchmark
     public boolean singletonHashMap() {
         HashMap<String, String> map = newSingletonHashMap();
         return map.containsKey("foo1");
@@ -73,7 +73,7 @@ public class MapsBenchmark {
         return map;
     }
 
-    @GenerateMicroBenchmark
+    @Benchmark
     public UnmodifiableIterator<Entry<String, String>> singletonImmutableMap() {
         return newSingletonImmutableMap().entrySet().iterator();
     }
@@ -83,7 +83,7 @@ public class MapsBenchmark {
         return ImmutableMap.of("foo1", "bar1");
     }
 
-    @GenerateMicroBenchmark
+    @Benchmark
     public Iterator<Entry<String, String>> doubleHashMap() {
         HashMap<String, String> map = newDoubleHashMap();
         return map.entrySet().iterator();
@@ -97,7 +97,7 @@ public class MapsBenchmark {
         return map;
     }
 
-    @GenerateMicroBenchmark
+    @Benchmark
     public Iterator<Entry<String, String>> doubleUnmodifiableHashMap() {
         Map<String, String> map = newDoubleUnmodifiableHashMap();
         return map.entrySet().iterator();
@@ -111,7 +111,7 @@ public class MapsBenchmark {
         return Collections.unmodifiableMap(map);
     }
 
-    @GenerateMicroBenchmark
+    @Benchmark
     public UnmodifiableIterator<Entry<String, String>> doubleImmutableMap() {
         return newDoubleImmutableMap().entrySet().iterator();
     }
@@ -121,7 +121,7 @@ public class MapsBenchmark {
         return ImmutableMap.of("foo1", "bar1", "foo2", "bar2");
     }
 
-    @GenerateMicroBenchmark
+    @Benchmark
     public Iterator<Entry<String, String>> trippleHashMap() {
         Map<String, String> map = newTrippleHashMap();
         return map.entrySet().iterator();
@@ -136,7 +136,7 @@ public class MapsBenchmark {
         return map;
     }
 
-    @GenerateMicroBenchmark
+    @Benchmark
     public Iterator<Entry<String, String>> trippleUnmodifiableHashMap() {
         Map<String, String> map = newTrippleUnmodifiableHashMap();
         return Collections.unmodifiableMap(map).entrySet().iterator();
@@ -151,7 +151,7 @@ public class MapsBenchmark {
         return map;
     }
 
-    @GenerateMicroBenchmark
+    @Benchmark
     public UnmodifiableIterator<Entry<String, String>> trippleImmutableMap() {
         return newTrippleImmutableMap().entrySet().iterator();
     }
@@ -161,13 +161,13 @@ public class MapsBenchmark {
         return ImmutableMap.of("foo1", "bar1", "foo2", "bar2", "foo3", "bar3");
     }
 
-    @GenerateMicroBenchmark
+    @Benchmark
     public Iterator<Entry<String, String>> quadroHashMap() {
         Map<String, String> map = newQuadroHashMap();
         return map.entrySet().iterator();
     }
 
-    @GenerateMicroBenchmark
+    @Benchmark
     public Iterator<Entry<String, String>> quadroUnmodifiableHashMap() {
         Map<String, String> map = newQuadroUnmodifiableHashMap();
         return map.entrySet().iterator();
@@ -193,7 +193,7 @@ public class MapsBenchmark {
         return Collections.unmodifiableMap(map);
     }
 
-    @GenerateMicroBenchmark
+    @Benchmark
     public UnmodifiableIterator<Entry<String, String>> quadroImmutableMap() {
         return newQuadroImmutableMap().entrySet().iterator();
     }
@@ -203,7 +203,7 @@ public class MapsBenchmark {
         return ImmutableMap.of("foo1", "bar1", "foo2", "bar2", "foo3", "bar3", "foo4", "bar4");
     }
 
-    @GenerateMicroBenchmark
+    @Benchmark
     public UnmodifiableIterator<Entry<String, String>> immutable128Map() {
         return newImmutable128Map().entrySet().iterator();
     }
@@ -217,7 +217,7 @@ public class MapsBenchmark {
         return builder.build();
     }
 
-    @GenerateMicroBenchmark
+    @Benchmark
     public Iterator<Entry<String, String>> hashExpected128Map() {
         return newHash128Map().entrySet().iterator();
     }
@@ -231,7 +231,7 @@ public class MapsBenchmark {
         return map;
     }
 
-    @GenerateMicroBenchmark
+    @Benchmark
     public Iterator<Entry<String, String>> hash128Map() {
         return newHash128Map().entrySet().iterator();
     }
@@ -245,7 +245,7 @@ public class MapsBenchmark {
         return map;
     }
 
-    @GenerateMicroBenchmark
+    @Benchmark
     public Iterator<Entry<String, String>> hashUnmodifiable128Map() {
         return newHashUnmodifiable128Map().entrySet().iterator();
     }

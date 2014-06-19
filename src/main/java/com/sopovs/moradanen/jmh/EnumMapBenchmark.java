@@ -6,7 +6,7 @@ import java.util.Map;
 
 import javolution.util.FastMap;
 
-import org.openjdk.jmh.annotations.GenerateMicroBenchmark;
+import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.infra.Blackhole;
@@ -49,42 +49,42 @@ public class EnumMapBenchmark {
 
     }
 
-    @GenerateMicroBenchmark
+    @Benchmark
     public void getFromSmallFastMap(Blackhole bh) {
         for (SmallEnum key : SmallEnum.values()) {
             bh.consume(smallFastMap.get(key));
         }
     }
 
-    @GenerateMicroBenchmark
+    @Benchmark
     public void getFromSmallHashMap(Blackhole bh) {
         for (SmallEnum key : SmallEnum.values()) {
             bh.consume(smallHashMap.get(key));
         }
     }
 
-    @GenerateMicroBenchmark
+    @Benchmark
     public void getFromSmallEnumMap(Blackhole bh) {
         for (SmallEnum key : SmallEnum.values()) {
             bh.consume(smallEnumMap.get(key));
         }
     }
 
-    @GenerateMicroBenchmark
+    @Benchmark
     public void getFromLargeFastMap(Blackhole bh) {
         for (LargeEnum key : LargeEnum.values()) {
             bh.consume(largeFastMap.get(key));
         }
     }
 
-    @GenerateMicroBenchmark
+    @Benchmark
     public void getFromLargeHashMap(Blackhole bh) {
         for (LargeEnum key : LargeEnum.values()) {
             bh.consume(largeHashMap.get(key));
         }
     }
 
-    @GenerateMicroBenchmark
+    @Benchmark
     public void getFromLargeEnumMap(Blackhole bh) {
         for (LargeEnum key : LargeEnum.values()) {
             bh.consume(largeEnumMap.get(key));

@@ -11,7 +11,7 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import org.openjdk.jmh.annotations.BenchmarkMode;
-import org.openjdk.jmh.annotations.GenerateMicroBenchmark;
+import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.Mode;
 import org.openjdk.jmh.annotations.OutputTimeUnit;
 import org.openjdk.jmh.annotations.Scope;
@@ -42,17 +42,17 @@ public class DeepCopyBenchmark {
         }
     }
 
-    @GenerateMicroBenchmark
+    @Benchmark
     public Set<Copyable> loopCopy() {
         return copySet(state);
     }
 
-    @GenerateMicroBenchmark
+    @Benchmark
     public Set<Copyable> deepCopy() {
         return deepCopy(state);
     }
 
-    @GenerateMicroBenchmark
+    @Benchmark
     public Object cloneCopy() {
         return state.clone();
     }

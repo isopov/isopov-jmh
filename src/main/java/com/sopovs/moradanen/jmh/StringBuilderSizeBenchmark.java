@@ -1,7 +1,7 @@
 package com.sopovs.moradanen.jmh;
 
 import org.openjdk.jmh.annotations.BenchmarkMode;
-import org.openjdk.jmh.annotations.GenerateMicroBenchmark;
+import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.Mode;
 import org.openjdk.jmh.annotations.OutputTimeUnit;
 import org.openjdk.jmh.runner.Runner;
@@ -18,7 +18,7 @@ import java.util.concurrent.TimeUnit;
 public class StringBuilderSizeBenchmark {
 
 
-    @GenerateMicroBenchmark
+    @Benchmark
     @BenchmarkMode(Mode.AverageTime)
     public String predefinedSize() {
         StringBuilder builder = new StringBuilder(1000);
@@ -28,7 +28,7 @@ public class StringBuilderSizeBenchmark {
         return builder.toString();
     }
 
-    @GenerateMicroBenchmark
+    @Benchmark
     @BenchmarkMode(Mode.AverageTime)
     public String expandingSize() {
         StringBuilder builder = new StringBuilder();

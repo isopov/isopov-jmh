@@ -2,7 +2,7 @@ package com.sopovs.moradanen.jmh;
 
 import com.google.common.collect.ImmutableMap;
 import javolution.util.FastMap;
-import org.openjdk.jmh.annotations.GenerateMicroBenchmark;
+import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.annotations.Threads;
@@ -56,7 +56,7 @@ public class FastMapBenchmark {
 	}
 
 
-	@GenerateMicroBenchmark
+	@Benchmark
 	public Map<String, String> createFastMap() {
 		Map<String, String> fastMap = new FastMap<>();
 		for (Iterator<String> keyIterator = keys.iterator(), valIterator = vals.iterator(); keyIterator.hasNext(); ) {
@@ -67,7 +67,7 @@ public class FastMapBenchmark {
 		return fastMap;
 	}
 
-	@GenerateMicroBenchmark
+	@Benchmark
 	public Map<String, String> createHashMap() {
 		Map<String, String> hashMap = new HashMap<>();
 		for (Iterator<String> keyIterator = keys.iterator(), valIterator = vals.iterator(); keyIterator.hasNext(); ) {
@@ -78,45 +78,45 @@ public class FastMapBenchmark {
 		return hashMap;
 	}
 
-	@GenerateMicroBenchmark
+	@Benchmark
 	public Map<String, String> createEmptyHashMap() {
 		return new HashMap<>();
 	}
 
-	@GenerateMicroBenchmark
+	@Benchmark
 	public Map<String, String> createEmptyFastMap() {
 		return new FastMap<>();
 	}
 
-	@GenerateMicroBenchmark
+	@Benchmark
 	public void getFromFastMap(Blackhole bh) {
 		for (String key : keysToTest) {
 			bh.consume(fastMap.get(key));
 		}
 	}
 
-	@GenerateMicroBenchmark
+	@Benchmark
 	public void getFromConcurrentHashMap(Blackhole bh) {
 		for (String key : keysToTest) {
 			bh.consume(concurrentHashMap.get(key));
 		}
 	}
 
-	@GenerateMicroBenchmark
+	@Benchmark
 	public void getFromImmutableMap(Blackhole bh) {
 		for (String key : keysToTest) {
 			bh.consume(immutableMap.get(key));
 		}
 	}
 
-	@GenerateMicroBenchmark
+	@Benchmark
 	public void getFromHashMap(Blackhole bh) {
 		for (String key : keysToTest) {
 			bh.consume(hashMap.get(key));
 		}
 	}
 
-	@GenerateMicroBenchmark()
+	@Benchmark
 	@Threads(8)
 	public void getFromConcurrentHashMap8Threads(Blackhole bh) {
 		for (String key : keysToTest) {
@@ -124,7 +124,7 @@ public class FastMapBenchmark {
 		}
 	}
 
-	@GenerateMicroBenchmark()
+	@Benchmark
 	@Threads(8)
 	public void getFromImmutableMap8Threads(Blackhole bh) {
 		for (String key : keysToTest) {
@@ -132,7 +132,7 @@ public class FastMapBenchmark {
 		}
 	}
 
-	@GenerateMicroBenchmark()
+	@Benchmark
 	@Threads(8)
 	public void getFromFastMap8Threads(Blackhole bh) {
 		for (String key : keysToTest) {

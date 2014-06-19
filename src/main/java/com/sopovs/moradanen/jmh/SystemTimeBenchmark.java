@@ -1,7 +1,7 @@
 package com.sopovs.moradanen.jmh;
 
 import org.openjdk.jmh.annotations.BenchmarkMode;
-import org.openjdk.jmh.annotations.GenerateMicroBenchmark;
+import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.Mode;
 import org.openjdk.jmh.annotations.OutputTimeUnit;
 import org.openjdk.jmh.annotations.Threads;
@@ -20,17 +20,17 @@ import java.util.concurrent.TimeUnit;
 @BenchmarkMode(Mode.AverageTime)
 public class SystemTimeBenchmark {
 
-	@GenerateMicroBenchmark()
+	@Benchmark()
 	public long testNanoTime() throws InterruptedException {
 		return System.nanoTime();
 	}
 
-	@GenerateMicroBenchmark()
+	@Benchmark()
 	public long testMillisFromNanoTime() throws InterruptedException {
 		return TimeUnit.MILLISECONDS.convert(System.nanoTime(), TimeUnit.NANOSECONDS);
 	}
 
-	@GenerateMicroBenchmark()
+	@Benchmark()
 	public long testMiliTime() {
 		return System.currentTimeMillis();
 	}

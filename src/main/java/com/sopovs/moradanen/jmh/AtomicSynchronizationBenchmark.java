@@ -1,7 +1,7 @@
 package com.sopovs.moradanen.jmh;
 
 import org.openjdk.jmh.annotations.BenchmarkMode;
-import org.openjdk.jmh.annotations.GenerateMicroBenchmark;
+import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.Mode;
 import org.openjdk.jmh.annotations.Param;
 import org.openjdk.jmh.annotations.Scope;
@@ -30,7 +30,7 @@ public class AtomicSynchronizationBenchmark {
 	private static final long ITERATION_SUM = 10000L;
 
 
-	@GenerateMicroBenchmark
+	@Benchmark
 	public long longAdder() throws Exception {
 		final LongAdder longAdder = new LongAdder();
 		Runnable counter = new Runnable() {
@@ -46,7 +46,7 @@ public class AtomicSynchronizationBenchmark {
 	}
 
 
-	@GenerateMicroBenchmark
+	@Benchmark
 	public long computeSynchronized() throws Exception {
 		final long[] sum = {0};
 		Runnable counter = new Runnable() {
@@ -63,7 +63,7 @@ public class AtomicSynchronizationBenchmark {
 		return sum[0];
 	}
 
-	@GenerateMicroBenchmark
+	@Benchmark
 	public long atomic() throws Exception {
 		final AtomicLong sum = new AtomicLong();
 		Runnable counter = new Runnable() {
