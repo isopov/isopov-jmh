@@ -86,7 +86,7 @@ public class AtomicSynchronizationBenchmark {
 		}
 		executorService.shutdown();
 		executorService.awaitTermination(10, TimeUnit.SECONDS);
-		if(executorService.isTerminated()){
+		if(!executorService.isTerminated()){
 			//We cannot measure next methods - because this one will continue execution and will interfere with them
 			System.exit(1);
 		}
