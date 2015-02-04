@@ -12,12 +12,12 @@
 		<dependency>
 			<groupId>org.openjdk.jmh</groupId>
 			<artifactId>jmh-samples</artifactId>
-			<version>1.1</version>
+			<version>1.5.1</version>
 		</dependency>
 		<dependency>
 			<groupId>org.openjdk.jmh</groupId>
 			<artifactId>jmh-generator-annprocess</artifactId>
-			<version>1.1</version>
+			<version>1.5.1</version>
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
@@ -28,7 +28,7 @@
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-core</artifactId>
-			<version>4.1.0.RELEASE</version>
+			<version>4.1.4.RELEASE</version>
 		</dependency>
 		<dependency>
 			<groupId>org.javolution</groupId>
@@ -38,7 +38,7 @@
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
-			<version>4.11</version>
+			<version>4.12</version>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
