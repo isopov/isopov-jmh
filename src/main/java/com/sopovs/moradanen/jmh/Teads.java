@@ -40,13 +40,9 @@ public class Teads {
 
     private static void floydWarshallIteration(byte[][] d, int k) {
         for (int i = 0; i < d.length; i++) {
-            floydWarshallRow(d, k, i);
-        }
-    }
-
-    private static void floydWarshallRow(byte[][] d, int k, int i) {
-        for (int j = 0; j < d.length; j++) {
-            d[i][j] = (byte) Math.min(d[i][j], d[i][k] + d[k][j]);
+            for (int j = 0; j < d.length; j++) {
+                d[i][j] = (byte) Math.min(d[i][j], d[i][k] + d[k][j]);
+            }
         }
     }
 
