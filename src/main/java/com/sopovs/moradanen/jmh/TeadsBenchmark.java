@@ -1,5 +1,6 @@
 package com.sopovs.moradanen.jmh;
 
+import java.util.Map;
 import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
 
@@ -10,6 +11,8 @@ import org.openjdk.jmh.runner.Runner;
 import org.openjdk.jmh.runner.RunnerException;
 import org.openjdk.jmh.runner.options.Options;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
+
+import com.sopovs.moradanen.jmh.Teads.Node;
 
 //Benchmark                                    Mode  Samples    Score  Score error  Units
 //c.s.m.j.ThrowNullBenchmark.baseline          avgt        3    0.265        0.006  ns/op
@@ -168,6 +171,24 @@ public class TeadsBenchmark {
     @BenchmarkMode(Mode.AverageTime)
     public int four() {
         return Teads.distanceFromCenter(new Scanner(FOUR.replace('#', '\n')));
+    }
+
+    @Benchmark
+    @BenchmarkMode(Mode.AverageTime)
+    public Map<Integer, Node> getOneNodes() {
+        return Teads.getNodes(new Scanner(ONE.replace('#', '\n')));
+    }
+
+    @Benchmark
+    @BenchmarkMode(Mode.AverageTime)
+    public Map<Integer, Node> getSixNodes() {
+        return Teads.getNodes(new Scanner(SIX.replace('#', '\n')));
+    }
+
+    @Benchmark
+    @BenchmarkMode(Mode.AverageTime)
+    public Map<Integer, Node> getFourNodes() {
+        return Teads.getNodes(new Scanner(FOUR.replace('#', '\n')));
     }
 
     public static void main(String[] args) throws RunnerException {
