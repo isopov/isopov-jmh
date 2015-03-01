@@ -12,7 +12,7 @@ import org.junit.rules.Timeout;
 public class TeadsBenchmarkTest {
 
     @Rule
-    public Timeout globalTimeout = new Timeout(2, TimeUnit.SECONDS);
+    public Timeout globalTimeout = new Timeout(5, TimeUnit.SECONDS);
 
     @Test
     public void testOne() {

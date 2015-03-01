@@ -89,6 +89,9 @@ public class Teads {
                     continue;
                 }
                 int dist = node.findMaxDistance(this, plus + 1, finder);
+                if (dist == Integer.MAX_VALUE) {
+                    return dist;
+                }
                 if (dist > result) {
                     result = dist;
                 }
