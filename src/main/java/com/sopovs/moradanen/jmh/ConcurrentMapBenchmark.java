@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import org.openjdk.jmh.annotations.Benchmark;
+import org.openjdk.jmh.annotations.Param;
 import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.infra.Blackhole;
@@ -33,13 +34,16 @@ public class ConcurrentMapBenchmark {
             .boxed()
             .collect(Collectors.toList());
 
+    @Param({ "0", "256", "4096", "8192", "16384", "32768", "65536" })
+    public long cpu;
+
     public static void main(String[] args) throws RunnerException {
 
         Options opt = new OptionsBuilder()
                 .include(".*" + ConcurrentMapBenchmark.class.getSimpleName() + ".*")
-                .warmupIterations(5)
+                .warmupIterations(3)
                 .measurementIterations(5)
-                .forks(3)
+                .forks(1)
                 .build();
 
         new Runner(opt).run();
@@ -47,22 +51,25 @@ public class ConcurrentMapBenchmark {
 
     @Benchmark
     public void regularImpl(Blackhole bh) throws Exception {
-        ConcurrentMap<Integer, String> map = new ConcurrentHashMap<>();
+        ConcurrentMap<Integer, Integer> map = new ConcurrentHashMap<>();
         doWork(bh, map);
     }
 
     @Benchmark
     public void defaultImpl(Blackhole bh) throws Exception {
-        ConcurrentMap<Integer, String> map = new MyConcurrentHashMap<>();
+        ConcurrentMap<Integer, Integer> map = new MyConcurrentHashMap<>();
         doWork(bh, map);
     }
 
-    private void doWork(Blackhole bh, ConcurrentMap<Integer, String> map) throws InterruptedException {
+    private void doWork(Blackhole bh, ConcurrentMap<Integer, Integer> map) throws InterruptedException {
         ExecutorService pool = Executors.newFixedThreadPool(NUMBER_OF_THREADS);
         for (int i = 0; i < NUMBER_OF_TASKS; i++) {
             final int j = i;
             pool.execute(() -> {
-                bh.consume(map.computeIfAbsent(tasks.get(j), Integer::toUnsignedString));
+                bh.consume(map.computeIfAbsent(tasks.get(j), val -> {
+                    Blackhole.consumeCPU(cpu);
+                    return val;
+                }));
             });
         }
         pool.shutdown();
