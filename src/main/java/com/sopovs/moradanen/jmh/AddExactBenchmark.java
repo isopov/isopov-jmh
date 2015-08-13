@@ -37,7 +37,7 @@ public class AddExactBenchmark {
         return addWithLongs(x, y);
     }
 
-    private static int addWithLongs(int x, int y) {
+    static int addWithLongs(int x, int y) {
         long xl = x;
         long yl = y;
         long result = xl + yl;
