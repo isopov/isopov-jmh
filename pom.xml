@@ -9,7 +9,7 @@
 
 
 	<properties>
-		<jmh.version>1.10.2</jmh.version>
+		<jmh.version>1.10.4</jmh.version>
 	</properties>
 
 	<dependencies>
