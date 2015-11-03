@@ -30,12 +30,13 @@ import org.openjdk.jmh.runner.RunnerException;
 import org.openjdk.jmh.runner.options.Options;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
 
-//Benchmark                                 (index)  Mode  Cnt  Score   Error  Units
-//MultipleColumnIndexBenchmark.bench         single  avgt    5  0.038 ± 0.007  ms/op
-//MultipleColumnIndexBenchmark.bench          multi  avgt    5  0.040 ± 0.005  ms/op
-//MultipleColumnIndexBenchmark.bench       no-index  avgt    5  6.373 ± 0.907  ms/op
-//MultipleColumnIndexBenchmark.bench  reverse-multi  avgt    5  6.381 ± 1.165  ms/op
-
+//Benchmark                                           (index)  Mode  Cnt  Score   Error  Units
+//MultipleColumnIndexBenchmark.bench                   single  avgt    5  0.039 ± 0.004  ms/op
+//MultipleColumnIndexBenchmark.bench             multi-unique  avgt    5  0.038 ± 0.010  ms/op
+//MultipleColumnIndexBenchmark.bench          multi-nonunique  avgt    5  0.038 ± 0.005  ms/op
+//MultipleColumnIndexBenchmark.bench                 no-index  avgt    5  6.656 ± 1.191  ms/op
+//MultipleColumnIndexBenchmark.bench     reverse-multi-unique  avgt    5  6.579 ± 0.661  ms/op
+//MultipleColumnIndexBenchmark.bench  reverse-multi-nonunique  avgt    5  6.886 ± 1.285  ms/op
 @BenchmarkMode(Mode.AverageTime)
 @Fork(1)
 @State(Scope.Benchmark)
@@ -52,7 +53,8 @@ public class MultipleColumnIndexBenchmark {
 	// State
 	private Connection con;
 
-	@Param({ "single", "multi", "no-index", "reverse-multi" })
+	@Param({ "single", "multi-unique", "multi-nonunique", "no-index", "reverse-multi-unique",
+			"reverse-multi-nonunique" })
 	private String index;
 
 	@Setup
@@ -62,14 +64,20 @@ public class MultipleColumnIndexBenchmark {
 		case "single":
 			prepareSingleIndexTable();
 			break;
-		case "multi":
-			prepareMultiIndexTable();
+		case "multi-unique":
+			prepareMultiUniqueIndexTable();
+			break;
+		case "multi-nonunique":
+			prepareMultiNonUniqueIndexTable();
 			break;
 		case "no-index":
 			prepareNoIndexTable();
 			break;
-		case "reverse-multi":
-			prepareReverseIndexTable();
+		case "reverse-multi-unique":
+			prepareReverseUniqueIndexTable();
+			break;
+		case "reverse-multi-nonunique":
+			prepareReverseNonUniqueIndexTable();
 			break;
 		default:
 			throw new IllegalStateException();
@@ -95,7 +103,7 @@ public class MultipleColumnIndexBenchmark {
 		populateData();
 	}
 
-	private void prepareMultiIndexTable() throws SQLException {
+	private void prepareMultiUniqueIndexTable() throws SQLException {
 		createTable();
 		try (Statement st = con.createStatement()) {
 			st.executeUpdate("create unique index test_index on test_table(foo, bar);");
@@ -103,10 +111,26 @@ public class MultipleColumnIndexBenchmark {
 		populateData();
 	}
 
-	private void prepareReverseIndexTable() throws SQLException {
+	private void prepareMultiNonUniqueIndexTable() throws SQLException {
+		createTable();
+		try (Statement st = con.createStatement()) {
+			st.executeUpdate("create index test_index on test_table(foo, bar);");
+		}
+		populateData();
+	}
+
+	private void prepareReverseUniqueIndexTable() throws SQLException {
 		createTable();
 		try (Statement st = con.createStatement()) {
 			st.executeUpdate("create unique index test_index on test_table(bar, foo);");
+		}
+		populateData();
+	}
+
+	private void prepareReverseNonUniqueIndexTable() throws SQLException {
+		createTable();
+		try (Statement st = con.createStatement()) {
+			st.executeUpdate("create index test_index on test_table(bar, foo);");
 		}
 		populateData();
 	}
