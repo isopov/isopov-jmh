@@ -22,6 +22,8 @@ import org.openjdk.jmh.runner.RunnerException;
 import org.openjdk.jmh.runner.options.Options;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
 
+import com.google.common.util.concurrent.RateLimiter;
+
 @BenchmarkMode(Mode.AverageTime)
 @Fork(3)
 @State(Scope.Benchmark)
@@ -30,7 +32,7 @@ import org.openjdk.jmh.runner.options.OptionsBuilder;
 @Measurement(iterations = 5, time = 1, timeUnit = TimeUnit.SECONDS)
 public class FilterBenchmark {
 
-	@Param({ "synchronized", "atomic" })
+	@Param({ "synchronized", "atomic", "guava" })
 	private String filterType;
 	private Filter filter;
 
@@ -48,6 +50,9 @@ public class FilterBenchmark {
 		case "atomic":
 			filter = new AtomicFilter(10, TimeUnit.SECONDS);
 			break;
+		case "guava":
+			filter = new GuavaFilter(10, TimeUnit.SECONDS);
+			break;
 		default:
 			throw new IllegalStateException();
 		}
@@ -61,6 +66,19 @@ public class FilterBenchmark {
 
 	interface Filter {
 		boolean isSignalAllowed();
+	}
+
+	public static class GuavaFilter implements Filter {
+		private final RateLimiter limiter;
+
+		public GuavaFilter(int n, TimeUnit timeUnit) {
+			limiter = RateLimiter.create(timeUnit.toSeconds(1) * n);
+		}
+
+		@Override
+		public boolean isSignalAllowed() {
+			return limiter.tryAcquire();
+		}
 	}
 
 	public static class AtomicFilter implements Filter {
