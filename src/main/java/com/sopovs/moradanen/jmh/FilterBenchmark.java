@@ -22,6 +22,7 @@ import org.openjdk.jmh.runner.RunnerException;
 import org.openjdk.jmh.runner.options.Options;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
 
+import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.RateLimiter;
 
 @BenchmarkMode(Mode.AverageTime)
@@ -45,7 +46,7 @@ public class FilterBenchmark {
 	public void setup() {
 		switch (filterType) {
 		case "synchronized":
-			filter = new SyncrhonizedFilter(10, TimeUnit.SECONDS);
+			filter = new SynchronizedFilter(10, TimeUnit.SECONDS);
 			break;
 		case "atomic":
 			filter = new AtomicFilter(10, TimeUnit.SECONDS);
@@ -71,6 +72,10 @@ public class FilterBenchmark {
 	public static class GuavaFilter implements Filter {
 		private final RateLimiter limiter;
 
+		public GuavaFilter(int n) {
+			this(n, TimeUnit.SECONDS);
+		}
+
 		public GuavaFilter(int n, TimeUnit timeUnit) {
 			limiter = RateLimiter.create(timeUnit.toSeconds(1) * n);
 		}
@@ -82,19 +87,23 @@ public class FilterBenchmark {
 	}
 
 	public static class AtomicFilter implements Filter {
-		private final long nsForSignal;
+		private final long nanosForSignal;
 		private final AtomicLong last;
 
+		public AtomicFilter(int n) {
+			this(n, TimeUnit.SECONDS);
+		}
+
 		public AtomicFilter(int n, TimeUnit timeUnit) {
-			nsForSignal = timeUnit.toNanos(1) / n;
-			last = new AtomicLong(System.nanoTime() - nsForSignal);
+			nanosForSignal = nanosForSignal(n, timeUnit);
+			last = new AtomicLong(System.nanoTime() - nanosForSignal);
 		}
 
 		@Override
 		public boolean isSignalAllowed() {
 			long lastTime = last.get();
 			long currentTime = System.nanoTime();
-			if (currentTime - lastTime >= nsForSignal) {
+			if (currentTime - lastTime >= nanosForSignal) {
 				return last.compareAndSet(lastTime, currentTime);
 			}
 			return false;
@@ -102,12 +111,22 @@ public class FilterBenchmark {
 
 	}
 
-	public static class SyncrhonizedFilter implements Filter {
+	private static long nanosForSignal(int n, TimeUnit timeUnit) {
+		long result = timeUnit.toNanos(1) / n;
+		Preconditions.checkState(result * n == timeUnit.toNanos(1));
+		return result;
+	}
+
+	public static class SynchronizedFilter implements Filter {
 		private final long nsForSignal;
 		private long last;
 
-		public SyncrhonizedFilter(int n, TimeUnit timeUnit) {
-			nsForSignal = timeUnit.toNanos(1) / n;
+		public SynchronizedFilter(int n) {
+			this(n, TimeUnit.SECONDS);
+		}
+
+		public SynchronizedFilter(int n, TimeUnit timeUnit) {
+			nsForSignal = nanosForSignal(n, timeUnit);
 			last = System.nanoTime() - nsForSignal;
 		}
 
