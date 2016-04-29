@@ -1,6 +1,7 @@
 package com.sopovs.moradanen.jmh;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -58,8 +59,7 @@ public class FilterBenchmarkTest {
 		assertEquals(1000, acquisitions.stream().filter(Future::isDone).count());
 
 		long realAcuisitions = acquisitions.stream().map(this::get).filter(Boolean.TRUE::equals).count();
-		assertEquals(10, realAcuisitions);
-
+		assertTrue(realAcuisitions <= 10);
 	}
 
 	private <T> T get(Future<T> future) {
@@ -97,7 +97,19 @@ public class FilterBenchmarkTest {
 	}
 
 	@Test
-	public void testTwoEvents() {
+	public void testBurstOfEventsForbidden() {
+		int counter = 0;
+		for (int i = 0; i < 5; i++) {
+			if (filter.isSignalAllowed()) {
+				counter++;
+			}
+		}
+
+		assertEquals(filter.getClass() + " failed", 1, counter);
+	}
+
+	@Test
+	public void testBurstOfEventsAllowed() {
 		int counter = 0;
 		for (int i = 0; i < 5; i++) {
 			if (filter.isSignalAllowed()) {
