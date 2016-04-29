@@ -1,8 +1,13 @@
 package com.sopovs.moradanen.jmh;
 
-import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.junit.Assert.assertEquals;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.After;
@@ -12,6 +17,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
+import org.openjdk.jmh.annotations.Param;
 
 import com.sopovs.moradanen.jmh.FilterBenchmark.Filter;
 
@@ -19,10 +25,8 @@ import com.sopovs.moradanen.jmh.FilterBenchmark.Filter;
 public class FilterBenchmarkTest {
 
 	@Parameters(name = "{0}")
-	public static String[] filterTypes() {
-		return new String[] {
-				"SynchronizedFilter", "GuavaFilter", "AtomicFilter", "SynchronizedDequeFilter", "SingleSchedulerFilter"
-		};
+	public static String[] filterTypes() throws Exception {
+		return FilterBenchmark.class.getField("filterType").getAnnotation(Param.class).value();
 	}
 
 	@Parameter
@@ -32,30 +36,38 @@ public class FilterBenchmarkTest {
 
 	@Before
 	public void setup() {
-		switch (filterType) {
-		case "SynchronizedFilter":
-			filter = new FilterBenchmark.SynchronizedFilter(10, SECONDS);
-			break;
-		case "GuavaFilter":
-			filter = new FilterBenchmark.GuavaFilter(10, SECONDS);
-			break;
-		case "AtomicFilter":
-			filter = new FilterBenchmark.AtomicFilter(10, SECONDS);
-			break;
-		case "SynchronizedDequeFilter":
-			filter = new FilterBenchmark.SynchronizedDequeFilter(10, SECONDS);
-			break;
-		case "SingleSchedulerFilter":
-			filter = new FilterBenchmark.SingleSchedulerFilter(10, SECONDS);
-			break;
-		default:
-			throw new IllegalStateException();
-		}
+		filter = FilterBenchmark.createFilter(filterType);
 	}
 
 	@After
 	public void tearDown() {
 		filter.shutdown();
+	}
+
+	@Test
+	public void testMultipleTthreads() throws InterruptedException {
+		ExecutorService pool = Executors.newFixedThreadPool(10);
+		List<Future<Boolean>> acquisitions = new ArrayList<>();
+		for (int i = 0; i < 1000; i++) {
+			acquisitions.add(pool.submit(filter::isSignalAllowed));
+		}
+		pool.shutdown();
+		pool.awaitTermination(500, TimeUnit.MILLISECONDS);
+
+		assertEquals(1000, acquisitions.size());
+		assertEquals(1000, acquisitions.stream().filter(Future::isDone).count());
+
+		long realAcuisitions = acquisitions.stream().map(this::get).filter(Boolean.TRUE::equals).count();
+		assertEquals(10, realAcuisitions);
+
+	}
+
+	private <T> T get(Future<T> future) {
+		try {
+			return future.get();
+		} catch (InterruptedException | ExecutionException e) {
+			throw new RuntimeException();
+		}
 	}
 
 	@Test

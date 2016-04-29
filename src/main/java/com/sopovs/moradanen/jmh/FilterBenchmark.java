@@ -20,6 +20,7 @@ import org.openjdk.jmh.annotations.Param;
 import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.State;
+import org.openjdk.jmh.annotations.TearDown;
 import org.openjdk.jmh.annotations.Threads;
 import org.openjdk.jmh.annotations.Warmup;
 import org.openjdk.jmh.runner.Runner;
@@ -38,9 +39,32 @@ import com.google.common.util.concurrent.RateLimiter;
 @Measurement(iterations = 5, time = 1, timeUnit = TimeUnit.SECONDS)
 public class FilterBenchmark {
 
-	@Param({ "synchronized", "atomic", "guava" })
-	private String filterType;
+	@Param({
+			"SynchronizedFilter",
+			"GuavaFilter",
+			"AtomicFilter",
+			"SynchronizedDequeFilter",
+			"SingleSchedulerFilter",
+	})
+	public String filterType;
 	private Filter filter;
+
+	static Filter createFilter(String filterType) {
+		switch (filterType) {
+		case "SynchronizedFilter":
+			return new FilterBenchmark.SynchronizedFilter(10);
+		case "GuavaFilter":
+			return new FilterBenchmark.GuavaFilter(10);
+		case "AtomicFilter":
+			return new FilterBenchmark.AtomicFilter(10);
+		case "SynchronizedDequeFilter":
+			return new FilterBenchmark.SynchronizedDequeFilter(10);
+		case "SingleSchedulerFilter":
+			return new FilterBenchmark.SingleSchedulerFilter(10);
+		default:
+			throw new IllegalStateException();
+		}
+	}
 
 	public static void main(String[] args) throws RunnerException {
 		Options opt = new OptionsBuilder().include(".*" + FilterBenchmark.class.getSimpleName() + ".*").build();
@@ -49,19 +73,12 @@ public class FilterBenchmark {
 
 	@Setup
 	public void setup() {
-		switch (filterType) {
-		case "synchronized":
-			filter = new SynchronizedFilter(10, TimeUnit.SECONDS);
-			break;
-		case "atomic":
-			filter = new AtomicFilter(10, TimeUnit.SECONDS);
-			break;
-		case "guava":
-			filter = new GuavaFilter(10, TimeUnit.SECONDS);
-			break;
-		default:
-			throw new IllegalStateException();
-		}
+		filter = createFilter(filterType);
+	}
+
+	@TearDown
+	public void tearDown() {
+		filter.shutdown();
 	}
 
 	@Threads(MAX)
