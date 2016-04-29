@@ -5,6 +5,8 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.concurrent.TimeUnit;
 
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -16,18 +18,45 @@ import com.sopovs.moradanen.jmh.FilterBenchmark.Filter;
 @RunWith(Parameterized.class)
 public class FilterBenchmarkTest {
 
-	@Parameters
-	public static Filter[] filters() {
-		return new Filter[] {
-				new FilterBenchmark.SynchronizedFilter(10, SECONDS),
-				new FilterBenchmark.GuavaFilter(10, TimeUnit.SECONDS),
-				new FilterBenchmark.AtomicFilter(10, TimeUnit.SECONDS),
-				new FilterBenchmark.SynchronizedDequeFilter(10, TimeUnit.SECONDS)
+	@Parameters(name = "{0}")
+	public static String[] filterTypes() {
+		return new String[] {
+				"SynchronizedFilter", "GuavaFilter", "AtomicFilter", "SynchronizedDequeFilter", "SingleSchedulerFilter"
 		};
 	}
 
 	@Parameter
-	public Filter filter;
+	public String filterType;
+
+	private Filter filter;
+
+	@Before
+	public void setup() {
+		switch (filterType) {
+		case "SynchronizedFilter":
+			filter = new FilterBenchmark.SynchronizedFilter(10, SECONDS);
+			break;
+		case "GuavaFilter":
+			filter = new FilterBenchmark.GuavaFilter(10, SECONDS);
+			break;
+		case "AtomicFilter":
+			filter = new FilterBenchmark.AtomicFilter(10, SECONDS);
+			break;
+		case "SynchronizedDequeFilter":
+			filter = new FilterBenchmark.SynchronizedDequeFilter(10, SECONDS);
+			break;
+		case "SingleSchedulerFilter":
+			filter = new FilterBenchmark.SingleSchedulerFilter(10, SECONDS);
+			break;
+		default:
+			throw new IllegalStateException();
+		}
+	}
+
+	@After
+	public void tearDown() {
+		filter.shutdown();
+	}
 
 	@Test
 	public void testSecondAfterSleep() throws InterruptedException {

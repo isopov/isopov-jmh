@@ -4,7 +4,10 @@ import static org.openjdk.jmh.annotations.Threads.MAX;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.openjdk.jmh.annotations.Benchmark;
@@ -69,6 +72,10 @@ public class FilterBenchmark {
 
 	interface Filter {
 		boolean isSignalAllowed();
+
+		default void shutdown() {
+			// no code
+		}
 	}
 
 	public static class GuavaFilter implements Filter {
@@ -147,6 +154,11 @@ public class FilterBenchmark {
 			}
 			return false;
 		}
+
+		@Override
+		public void shutdown() {
+			acquisitions.clear();
+		}
 	}
 
 	public static class SynchronizedFilter implements Filter {
@@ -171,6 +183,34 @@ public class FilterBenchmark {
 			}
 			return false;
 		}
+	}
+
+	public static class SingleSchedulerFilter implements Filter {
+		private final int n;
+		private final AtomicInteger count = new AtomicInteger(0);
+		private final ScheduledExecutorService scheduler;
+
+		public SingleSchedulerFilter(int n) {
+			this(n, TimeUnit.SECONDS);
+		}
+
+		public SingleSchedulerFilter(int n, TimeUnit timeUnit) {
+			this.n = n;
+			scheduler = Executors.newSingleThreadScheduledExecutor();
+			scheduler.scheduleAtFixedRate(() -> count.set(0), 1, 1, timeUnit);
+
+		}
+
+		@Override
+		public boolean isSignalAllowed() {
+			return count.getAndUpdate(curr -> curr == n ? curr : curr + 1) < n;
+		}
+
+		@Override
+		public void shutdown() {
+			scheduler.shutdownNow();
+		}
+
 	}
 
 }
