@@ -2,6 +2,8 @@ package com.sopovs.moradanen.jmh;
 
 import static org.openjdk.jmh.annotations.Threads.MAX;
 
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -115,6 +117,36 @@ public class FilterBenchmark {
 		long result = timeUnit.toNanos(1) / n;
 		Preconditions.checkState(result * n == timeUnit.toNanos(1));
 		return result;
+	}
+
+	public static class SynchronizedDequeFilter implements Filter {
+		private final int n;
+		private final long time;
+		private final Deque<Long> acquisitions = new ArrayDeque<>();
+
+		public SynchronizedDequeFilter(int n) {
+			this(n, TimeUnit.SECONDS);
+		}
+
+		public SynchronizedDequeFilter(int n, TimeUnit timeUnit) {
+			this.n = n;
+			this.time = timeUnit.toNanos(1);
+		}
+
+		@Override
+		public synchronized boolean isSignalAllowed() {
+			long currentTime = System.nanoTime();
+			if (acquisitions.size() < n) {
+				acquisitions.addLast(currentTime);
+				return true;
+			}
+			if (currentTime - acquisitions.getFirst() >= time) {
+				acquisitions.removeFirst();
+				acquisitions.addLast(currentTime);
+				return true;
+			}
+			return false;
+		}
 	}
 
 	public static class SynchronizedFilter implements Filter {

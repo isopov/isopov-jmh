@@ -21,7 +21,8 @@ public class FilterBenchmarkTest {
 		return new Filter[] {
 				new FilterBenchmark.SynchronizedFilter(10, SECONDS),
 				new FilterBenchmark.GuavaFilter(10, TimeUnit.SECONDS),
-				new FilterBenchmark.AtomicFilter(10, TimeUnit.SECONDS)
+				new FilterBenchmark.AtomicFilter(10, TimeUnit.SECONDS),
+				new FilterBenchmark.SynchronizedDequeFilter(10, TimeUnit.SECONDS)
 		};
 	}
 
@@ -29,7 +30,20 @@ public class FilterBenchmarkTest {
 	public Filter filter;
 
 	@Test
-	public void testMinute() {
+	public void testSecondAfterSleep() throws InterruptedException {
+		Thread.sleep(500);
+		long start = System.nanoTime();
+		int counter = 0;
+		while (System.nanoTime() - start < TimeUnit.SECONDS.toNanos(1)) {
+			if (filter.isSignalAllowed()) {
+				counter++;
+			}
+		}
+		assertEquals(filter.getClass() + " failed", 10, counter);
+	}
+
+	@Test
+	public void testSecond() {
 
 		long start = System.nanoTime();
 		int counter = 0;
