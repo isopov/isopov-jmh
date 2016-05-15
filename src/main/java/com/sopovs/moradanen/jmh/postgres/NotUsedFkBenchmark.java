@@ -52,10 +52,10 @@ public class NotUsedFkBenchmark {
     public void setup() throws SQLException {
         con = DriverManager.getConnection("jdbc:postgresql://localhost/testdb", "postgres", "postgres");
         try (Statement st = con.createStatement()) {
-            st.executeUpdate("drop table if exists test_table cascade");
-            for (int i = 0; i < 20; i++) {
-                st.executeUpdate("drop table if exists test_table_ref_" + i + " cascade");
+            for (int i = 0; i < 2000; i++) {
+                st.executeUpdate("drop table if exists test_table_ref_" + i);
             }
+            st.executeUpdate("drop table if exists test_table");
             st.executeUpdate("create table test_table(id bigserial primary key, junk text)");
 
             for (int i = 0; i < fks; i++) {
@@ -74,13 +74,23 @@ public class NotUsedFkBenchmark {
     }
 
     @Benchmark
-    public int insert() throws SQLException {
+    public int update() throws SQLException {
 
         try (PreparedStatement pst = con.prepareStatement("update test_table set junk=? where id=?")) {
             pst.setString(1, String.valueOf(r.nextInt()));
             pst.setLong(2, r.nextInt(values) + 1);
             return pst.executeUpdate();
         }
+    }
+
+    @Benchmark
+    public int insert() throws SQLException {
+
+        try (PreparedStatement pst = con.prepareStatement("insert into test_table(junk) values(?)")) {
+            pst.setString(1, String.valueOf(r.nextInt()));
+            return pst.executeUpdate();
+        }
+
     }
 
     public static void main(String[] args) throws RunnerException {
