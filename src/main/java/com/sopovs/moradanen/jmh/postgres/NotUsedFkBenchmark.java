@@ -1,5 +1,16 @@
 package com.sopovs.moradanen.jmh.postgres;
 
+//Benchmark                  (fks)  (values)  Mode  Cnt   Score   Error  Units
+
+//NotUsedFkBenchmark.delete      0    100000  avgt    5   0.873 ± 0.002  ms/op
+//NotUsedFkBenchmark.delete   2000    100000  avgt    5  89.341 ± 4.680  ms/op
+//NotUsedFkBenchmark.insert      0    100000  avgt    5   0.436 ± 0.006  ms/op
+//NotUsedFkBenchmark.insert   2000    100000  avgt    5   0.467 ± 0.015  ms/op
+//NotUsedFkBenchmark.update      0    100000  avgt    5   0.442 ± 0.050  ms/op
+//NotUsedFkBenchmark.update   2000    100000  avgt    5   0.812 ± 0.194  ms/op
+
+import static com.google.common.base.Preconditions.checkState;
+
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -25,9 +36,15 @@ import org.openjdk.jmh.runner.options.Options;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
 
 /**
- * @author isopov Recreation of the
+ * @author isopov
+ * 
+ *         Recreation of the
  *         http://bonesmoses.org/2014/05/14/foreign-keys-are-not-free/
+ * 
+ *         With extensions based on the discussion in
+ *         https://www.facebook.com/groups/postgresql
  */
+
 @BenchmarkMode(Mode.AverageTime)
 @Fork(1)
 @State(Scope.Benchmark)
@@ -81,6 +98,7 @@ public class NotUsedFkBenchmark {
             pst.setLong(2, r.nextInt(values) + 1);
             return pst.executeUpdate();
         }
+
     }
 
     @Benchmark
@@ -91,6 +109,23 @@ public class NotUsedFkBenchmark {
             return pst.executeUpdate();
         }
 
+    }
+
+    @Benchmark
+    public void delete() throws SQLException {
+
+        long newID = r.nextInt(values) + values;
+
+        try (PreparedStatement pst = con.prepareStatement("insert into test_table(id, junk) values(?,?)")) {
+            pst.setLong(1, newID);
+            pst.setString(2, String.valueOf(r.nextInt()));
+            checkState(1 == pst.executeUpdate());
+        }
+
+        try (PreparedStatement pst = con.prepareStatement("delete from test_table where id=?")) {
+            pst.setLong(1, newID);
+            checkState(1 == pst.executeUpdate());
+        }
     }
 
     public static void main(String[] args) throws RunnerException {
