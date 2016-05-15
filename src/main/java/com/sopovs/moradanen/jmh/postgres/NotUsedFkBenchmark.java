@@ -40,11 +40,11 @@ public class NotUsedFkBenchmark {
     private Connection con;
     private Random r = new Random();
 
-    // @Param({ "0", "1", "2", "5", "10", "20" })
-    @Param({ "0", "20" })
+    // To see difference from such benchmark (where prepared_statements
+    // introduce significant overhead) we need more fks
+    @Param({ "0", "2000" })
     private int fks;
 
-    // @Param({ "100", "1000", "10000", "100000" })
     @Param({ "100000" })
     private int values;
 
@@ -59,7 +59,8 @@ public class NotUsedFkBenchmark {
             st.executeUpdate("create table test_table(id bigserial primary key, junk text)");
 
             for (int i = 0; i < fks; i++) {
-                st.executeUpdate("create table test_table_ref_" + i + "(id bigint references test_table(id))");
+                st.executeUpdate("create table test_table_ref_" + i
+                        + "(id bigint references test_table(id) ON UPDATE NO ACTION)");
             }
         }
         try (PreparedStatement pst = con.prepareStatement("insert into test_table(junk) values(?)")) {
