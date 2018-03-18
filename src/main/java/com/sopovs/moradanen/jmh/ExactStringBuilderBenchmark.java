@@ -17,10 +17,6 @@ import org.openjdk.jmh.runner.RunnerException;
 import org.openjdk.jmh.runner.options.Options;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
 
-import sun.misc.JavaLangAccess;
-import sun.misc.SharedSecrets;
-
-@SuppressWarnings("restriction")
 @BenchmarkMode(Mode.AverageTime)
 @Fork(3)
 @State(Scope.Benchmark)
@@ -50,48 +46,11 @@ public class ExactStringBuilderBenchmark {
 		return builder.toString();
 	}
 
-	@Benchmark
-	public String exactStringBuilder() {
-		ExactStringBuilder builder = new ExactStringBuilder(totalSize);
-		for (String input : inputs) {
-			builder.append(input);
-		}
-		return builder.toString();
-	}
-
 	public static void main(String[] args) throws RunnerException {
 		Options opt = new OptionsBuilder().include(".*" + ExactStringBuilderBenchmark.class.getSimpleName() + ".*")
 				// .addProfiler(LinuxPerfNormProfiler.class)
 				.build();
 
 		new Runner(opt).run();
-	}
-
-	private static class ExactStringBuilder {
-		private static final JavaLangAccess javaLangAccess = SharedSecrets.getJavaLangAccess();
-
-		private final char[] value;
-		private int index = 0;
-
-		public ExactStringBuilder(int size) {
-			value = new char[size];
-		}
-
-		public ExactStringBuilder append(char c) {
-			value[index++] = c;
-			return this;
-		}
-
-		public ExactStringBuilder append(String s) {
-			for (int i = 0; i < s.length(); i++) {
-				append(s.charAt(i));
-			}
-			return this;
-		}
-
-		@Override
-		public String toString() {
-			return javaLangAccess.newStringUnsafe(value);
-		}
 	}
 }
