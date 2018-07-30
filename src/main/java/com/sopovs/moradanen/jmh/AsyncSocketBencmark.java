@@ -6,8 +6,10 @@ import java.io.*;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
 import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousSocketChannel;
+import java.nio.channels.CompletionHandler;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.concurrent.CompletableFuture;
@@ -21,17 +23,13 @@ import java.util.concurrent.TimeUnit;
 @Measurement(iterations = 5, time = 1)
 @State(Scope.Benchmark)
 public class AsyncSocketBencmark {
-
-    private static final int PORT = 9999;
-
     private static final byte[] PING = "ping".getBytes(StandardCharsets.UTF_8);
     private static final byte[] PONG = "pong".getBytes(StandardCharsets.UTF_8);
     private static final int MESSAGE_SIZE = PING.length;
 
     @Param({"1", "10", "100"})
     public int pings;
-    @Param({"blocking", "async"})
-//    @Param({"blocking", "async", "asyncHandlers"})
+    @Param({"blocking", "async", "asyncHandlers"})
     public String type;
 
     private Server server;
@@ -43,10 +41,13 @@ public class AsyncSocketBencmark {
         server.start();
         switch (type) {
             case "blocking":
-                pingClient = new BlockingPingClient();
+                pingClient = new BlockingPingClient(server.getPort());
                 break;
             case "async":
-                pingClient = new AsyncPingClient();
+                pingClient = new AsyncPingClient(server.getPort());
+                break;
+            case "asyncHandlers":
+                pingClient = new AsyncHandlersPingClient(server.getPort());
                 break;
             default:
                 throw new IllegalStateException();
@@ -60,7 +61,7 @@ public class AsyncSocketBencmark {
     }
 
     @Benchmark
-    public void ping(){
+    public void ping() {
         pingClient.ping(pings);
     }
 
@@ -71,7 +72,7 @@ public class AsyncSocketBencmark {
 
         @Override
         public void run() {
-            try (ServerSocket serverSocket = new ServerSocket(PORT)) {
+            try (ServerSocket serverSocket = new ServerSocket(0)) {
                 this.serverSocket = serverSocket;
                 started.complete(null);
                 while (true) {
@@ -88,9 +89,17 @@ public class AsyncSocketBencmark {
                         //ignore
                     }
                 }
+            } catch (SocketException e) {
+                if (!"Socket closed".equals(e.getMessage())) {
+                    e.printStackTrace();
+                }
             } catch (Exception e) {
                 e.printStackTrace();
             }
+        }
+
+        public int getPort() {
+            return serverSocket.getLocalPort();
         }
 
         public void close() throws IOException, InterruptedException {
@@ -125,8 +134,8 @@ public class AsyncSocketBencmark {
         private final DataOutputStream out;
         private final byte[] buffer = new byte[MESSAGE_SIZE];
 
-        BlockingPingClient() throws IOException {
-            socket = new Socket("localhost", PORT);
+        BlockingPingClient(int port) throws IOException {
+            socket = new Socket("localhost", port);
             in = new DataInputStream(socket.getInputStream());
             out = new DataOutputStream(socket.getOutputStream());
         }
@@ -161,32 +170,14 @@ public class AsyncSocketBencmark {
         }
     }
 
-//    @Benchmark
-//    public void blockingPingClient() throws Exception {
-//        try (Socket socket = new Socket("localhost", PORT);
-//             DataInputStream in = new DataInputStream(new BufferedInputStream(socket.getInputStream()));
-//             DataOutputStream out = new DataOutputStream(new BufferedOutputStream(socket.getOutputStream()))) {
-//            for (int i = 0; i < pings; i++) {
-//                out.writeInt(i);
-//                out.write(PING);
-//                out.flush();
-//                if (i != in.readInt()) {
-//                    throw new IllegalStateException();
-//                }
-//                in.skipBytes(PING.length);
-//            }
-//        }
-//    }
-
-
     static class AsyncPingClient implements PingClient {
 
         private final AsynchronousSocketChannel channel;
         private final ByteBuffer buffer = ByteBuffer.allocate(MESSAGE_SIZE);
 
-        AsyncPingClient() throws Exception {
+        AsyncPingClient(int port) throws Exception {
             channel = AsynchronousSocketChannel.open();
-            channel.connect(new InetSocketAddress("localhost", PORT)).get();
+            channel.connect(new InetSocketAddress("localhost", port)).get();
         }
 
 
@@ -227,115 +218,95 @@ public class AsyncSocketBencmark {
         }
     }
 
-//    @Benchmark
-//    public void asyncPingClient() throws IOException, InterruptedException, ExecutionException {
-//        try (AsynchronousSocketChannel channel = AsynchronousSocketChannel.open()) {
-//            channel.connect(new InetSocketAddress("localhost", PORT)).get();
-//
-//            ByteBuffer buffer = ByteBuffer.allocate(MESSAGE_SIZE);
-//            for (int i = 0; i < pings; i++) {
-//                buffer
-//                        .put(PING)
-//                        .flip();
-//                int written = 0;
-//                while (written < MESSAGE_SIZE) {
-//                    written += channel.write(buffer).get();
-//                }
-//
-//                buffer.flip();
-//                int read = 0;
-//                while (read < MESSAGE_SIZE) {
-//                    read += channel.read(buffer).get();
-//                }
-//                buffer.flip();
-//                if (i != buffer.getInt()) {
-//                    throw new IllegalStateException();
-//                }
-//
-//
-//                buffer.clear();
-//            }
-//        }
-//    }
+    static class AsyncHandlersPingClient implements PingClient {
+        final ByteBuffer buffer = ByteBuffer.allocate(MESSAGE_SIZE);
+        final AsynchronousSocketChannel channel;
+        final CompletionHandler<Integer, PingContext> writeHandler = new CompletionHandler<Integer, PingContext>() {
+            @Override
+            public void completed(Integer result, PingContext pingContext) {
+                if (buffer.hasRemaining()) {
+                    channel.write(buffer, pingContext, this);
+                    return;
+                }
 
-//    @Benchmark
-//    public void asyncHandlersPingClient() throws Exception {
-//        try (AsyncPingClient asyncPingClient = new AsyncPingClient(pings)) {
-//            asyncPingClient.startPing();
-//            asyncPingClient.waitCompletion();
-//        }
-//
-//    }
-//
-//    static class AsyncHandlersPingClient implements PingClient {
-//        private final int pings;
-//        final AtomicInteger counter = new AtomicInteger();
-//        final ByteBuffer buffer = ByteBuffer.allocate(MESSAGE_SIZE);
-//        final AsynchronousSocketChannel channel;
-//        final CompletableFuture<Void> complete = new CompletableFuture<>();
-//        final CompletionHandler<Integer, Void> writeHandler = new CompletionHandler<Integer, Void>() {
-//            @Override
-//            public void completed(Integer result, Void ignored) {
-//                buffer.flip();
-//                channel.read(buffer, 0, readHandler);
-//            }
-//
-//            @Override
-//            public void failed(Throwable e, Void ignored) {
-//                e.printStackTrace();
-//            }
-//        };
-//        final CompletionHandler<Integer, Integer> readHandler = new CompletionHandler<Integer, Integer>() {
-//            @Override
-//            public void completed(Integer result, Integer alreadyRead) {
-//                if (alreadyRead + result < MESSAGE_SIZE) {
-//                    channel.read(buffer, alreadyRead + result, this);
-//                    return;
-//                }
-//                buffer.flip();
-//                int count = counter.getAndIncrement();
-//                if (count >= pings) {
-//                    complete.complete(null);
-//                } else {
-//                    ping(counter, count);
-//                }
-//            }
-//
-//            @Override
-//            public void failed(Throwable e, Integer ignored) {
-//                e.printStackTrace();
-//            }
-//        };
-//
-//
-//        AsyncPingClient(int pings) throws IOException, ExecutionException, InterruptedException {
-//            this.pings = pings;
-//            channel = AsynchronousSocketChannel.open();
-//            channel.connect(new InetSocketAddress("localhost", PORT)).get();
-//        }
-//
-//        void startPing() {
-//            ping(counter, counter.getAndIncrement());
-//        }
-//
-//        private void ping(AtomicInteger counter, int count) {
-//            buffer.clear();
-//            buffer.putInt(count);
-//            buffer.put(PING);
-//            buffer.flip();
-//
-//            channel.write(buffer, null, writeHandler);
-//        }
-//
-//
-//        void waitCompletion() throws ExecutionException, InterruptedException {
-//            complete.get();
-//        }
-//
-//        @Override
-//        public void close() throws IOException {
-//            channel.close();
-//        }
-//    }
+
+                buffer.flip();
+
+                pingContext.pingsLeft--;
+                channel.read(buffer, pingContext, readHandler);
+            }
+
+            @Override
+            public void failed(Throwable e, PingContext ignored) {
+                e.printStackTrace();
+            }
+        };
+        final CompletionHandler<Integer, PingContext> readHandler = new CompletionHandler<Integer, PingContext>() {
+            @Override
+            public void completed(Integer result, PingContext pingContext) {
+                if (buffer.hasRemaining()) {
+                    channel.read(buffer, pingContext, this);
+                    return;
+                }
+
+                buffer.flip();
+
+                if (!Arrays.equals(PONG, buffer.array())) {
+                    throw new IllegalStateException();
+                }
+
+                if (pingContext.pingsLeft < 1) {
+                    pingContext.complete.complete(null);
+                } else {
+                    ping(pingContext);
+                }
+            }
+
+            @Override
+            public void failed(Throwable e, PingContext ignored) {
+                e.printStackTrace();
+            }
+        };
+
+
+        AsyncHandlersPingClient(int port) throws IOException, ExecutionException, InterruptedException {
+            channel = AsynchronousSocketChannel.open();
+            channel.connect(new InetSocketAddress("localhost", port)).get();
+        }
+
+
+        private void ping(PingContext pingContext) {
+            buffer.clear();
+            buffer.put(PING);
+            buffer.flip();
+
+            channel.write(buffer, pingContext, writeHandler);
+        }
+
+        @Override
+        public void ping(int times) {
+            PingContext pingContext = new PingContext(times);
+            ping(pingContext);
+            try {
+                pingContext.complete.get();
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        @Override
+        public void close() throws IOException {
+            channel.close();
+        }
+    }
+
+    static class PingContext {
+        final CompletableFuture<Void> complete = new CompletableFuture<>();
+        int pingsLeft;
+
+        public PingContext(int pingsLeft) {
+            this.pingsLeft = pingsLeft;
+        }
+    }
 
 }
