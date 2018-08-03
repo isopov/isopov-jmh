@@ -1,5 +1,14 @@
 package com.sopovs.moradanen.jmh;
 
+import io.netty.bootstrap.Bootstrap;
+import io.netty.buffer.ByteBuf;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelInitializer;
+import io.netty.channel.EventLoopGroup;
+import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.socket.SocketChannel;
+import io.netty.channel.socket.nio.NioSocketChannel;
 import org.openjdk.jmh.annotations.*;
 
 import java.io.*;
@@ -29,10 +38,11 @@ public class AsyncSocketBencmark {
 
     @Param({"1", "10", "100"})
     public int pings;
+    //TODO netty
     @Param({"blocking", "async", "asyncHandlers"})
     public String type;
 
-    private Server server;
+    Server server;
     private PingClient pingClient;
 
     @Setup
@@ -48,6 +58,9 @@ public class AsyncSocketBencmark {
                 break;
             case "asyncHandlers":
                 pingClient = new AsyncHandlersPingClient(server.getPort());
+                break;
+            case "netty":
+                pingClient = new NettyPingClient(server.getPort());
                 break;
             default:
                 throw new IllegalStateException();
@@ -69,6 +82,8 @@ public class AsyncSocketBencmark {
         final CompletableFuture<Void> started = new CompletableFuture<>();
         Socket socket;
         ServerSocket serverSocket;
+        private final byte[] buffer = new byte[MESSAGE_SIZE];
+        int count = 0;
 
         @Override
         public void run() {
@@ -82,8 +97,18 @@ public class AsyncSocketBencmark {
                             DataOutputStream out = new DataOutputStream(socket.getOutputStream())) {
                         this.socket = socket;
                         while (true) {
-                            in.skipBytes(PING.length);
+                            int read = in.read(buffer);
+                            if (read == -1) {
+                                return;
+                            }
+                            if (read != MESSAGE_SIZE) {
+                                throw new IllegalStateException();
+                            }
+                            if (!Arrays.equals(buffer, PING)) {
+                                throw new IllegalStateException();
+                            }
                             out.write(PONG);
+                            count++;
                         }
                     } catch (EOFException e) {
                         //ignore
@@ -215,6 +240,52 @@ public class AsyncSocketBencmark {
         @Override
         public void close() throws IOException {
             channel.close();
+        }
+    }
+
+
+    static class NettyPingClient implements PingClient {
+        private final EventLoopGroup workerGroup = new NioEventLoopGroup();
+        private final int port;
+
+        public NettyPingClient(int port) {
+            this.port = port;
+
+            Bootstrap b = new Bootstrap();
+            b.group(workerGroup)
+                    .channel(NioSocketChannel.class)
+                    .handler(new NettyPingClientInitializer());
+        }
+
+        @Override
+        public void ping(int times) {
+            //TODO
+        }
+
+        @Override
+        public void close() {
+            try {
+                workerGroup.shutdownGracefully().get();
+            } catch (Exception e) {
+                if (e instanceof RuntimeException) throw (RuntimeException) e;
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
+    static class NettyPingClientInitializer extends ChannelInitializer<SocketChannel> {
+
+        @Override
+        protected void initChannel(SocketChannel ch) throws Exception {
+            //TODO
+        }
+    }
+
+    static class NettyPingClientHandler extends SimpleChannelInboundHandler<ByteBuf> {
+
+        @Override
+        protected void channelRead0(ChannelHandlerContext ctx, ByteBuf msg) throws Exception {
+            //TODO
         }
     }
 
