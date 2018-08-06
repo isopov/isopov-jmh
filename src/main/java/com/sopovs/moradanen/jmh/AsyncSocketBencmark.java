@@ -1,14 +1,13 @@
 package com.sopovs.moradanen.jmh;
 
 import io.netty.bootstrap.Bootstrap;
-import io.netty.buffer.ByteBuf;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelInitializer;
-import io.netty.channel.EventLoopGroup;
-import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.handler.codec.FixedLengthFrameDecoder;
+import io.netty.handler.codec.bytes.ByteArrayDecoder;
+import io.netty.handler.codec.bytes.ByteArrayEncoder;
 import org.openjdk.jmh.annotations.*;
 
 import java.io.*;
@@ -23,7 +22,24 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+
+//Linux on laptop
+//Benchmark                 (pings)         (type)  Mode  Cnt     Score     Error  Units
+//AsyncSocketBencmark.ping        1       blocking  avgt   15    30.421 ±   1.444  us/op
+//AsyncSocketBencmark.ping        1          async  avgt   15    86.396 ±   6.434  us/op
+//AsyncSocketBencmark.ping        1  asyncHandlers  avgt   15    52.085 ±   3.315  us/op
+//AsyncSocketBencmark.ping        1          netty  avgt   15    62.704 ±   1.878  us/op
+//AsyncSocketBencmark.ping       10       blocking  avgt   15   303.597 ±   8.171  us/op
+//AsyncSocketBencmark.ping       10          async  avgt   15   858.335 ±  69.169  us/op
+//AsyncSocketBencmark.ping       10  asyncHandlers  avgt   15   769.964 ±  62.751  us/op
+//AsyncSocketBencmark.ping       10          netty  avgt   15   456.217 ±  15.359  us/op
+//AsyncSocketBencmark.ping      100       blocking  avgt   15  3038.410 ±  95.339  us/op
+//AsyncSocketBencmark.ping      100          async  avgt   15  8399.860 ± 801.164  us/op
+//AsyncSocketBencmark.ping      100  asyncHandlers  avgt   15  7668.647 ± 712.955  us/op
+//AsyncSocketBencmark.ping      100          netty  avgt   15  4980.081 ± 626.558  us/op
 
 @BenchmarkMode(Mode.AverageTime)
 @Fork(3)
@@ -38,8 +54,7 @@ public class AsyncSocketBencmark {
 
     @Param({"1", "10", "100"})
     public int pings;
-    //TODO netty
-    @Param({"blocking", "async", "asyncHandlers"})
+    @Param({"blocking", "async", "asyncHandlers", "netty"})
     public String type;
 
     Server server;
@@ -246,20 +261,34 @@ public class AsyncSocketBencmark {
 
     static class NettyPingClient implements PingClient {
         private final EventLoopGroup workerGroup = new NioEventLoopGroup();
-        private final int port;
+        private final Channel channel;
+        private final Semaphore semaphore = new Semaphore(0);
+        private final AtomicInteger pingsLeft = new AtomicInteger();
 
-        public NettyPingClient(int port) {
-            this.port = port;
-
+        public NettyPingClient(int port) throws Exception {
             Bootstrap b = new Bootstrap();
-            b.group(workerGroup)
+            channel = b.group(workerGroup)
                     .channel(NioSocketChannel.class)
-                    .handler(new NettyPingClientInitializer());
+                    .handler(new NettyPingClientInitializer(semaphore, pingsLeft))
+                    .connect("localhost", port)
+                    .await().channel();
+
         }
 
         @Override
         public void ping(int times) {
-            //TODO
+            if (0 != semaphore.availablePermits()) {
+                throw new IllegalStateException();
+            }
+            if (!pingsLeft.compareAndSet(0, times - 1)) {
+                throw new IllegalStateException();
+            }
+            channel.writeAndFlush(PING);
+            try {
+                semaphore.acquire(times);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
         }
 
         @Override
@@ -274,18 +303,45 @@ public class AsyncSocketBencmark {
     }
 
     static class NettyPingClientInitializer extends ChannelInitializer<SocketChannel> {
+        private final Semaphore semaphore;
+        private final AtomicInteger pingsLeft;
+
+        public NettyPingClientInitializer(Semaphore semaphore, AtomicInteger pingsLeft) {
+            this.semaphore = semaphore;
+            this.pingsLeft = pingsLeft;
+        }
 
         @Override
         protected void initChannel(SocketChannel ch) throws Exception {
-            //TODO
+            ChannelPipeline pipeline = ch.pipeline();
+            pipeline.addLast(new FixedLengthFrameDecoder(MESSAGE_SIZE));
+            pipeline.addLast(new ByteArrayDecoder());
+            pipeline.addLast(new ByteArrayEncoder());
+            pipeline.addLast(new NettyPingClientHandler(semaphore, pingsLeft));
         }
     }
 
-    static class NettyPingClientHandler extends SimpleChannelInboundHandler<ByteBuf> {
+    static class NettyPingClientHandler extends SimpleChannelInboundHandler<byte[]> {
+        private final Semaphore semaphore;
+        private final AtomicInteger pingsLeft;
+
+        public NettyPingClientHandler(Semaphore semaphore, AtomicInteger pingsLeft) {
+            this.semaphore = semaphore;
+            this.pingsLeft = pingsLeft;
+        }
 
         @Override
-        protected void channelRead0(ChannelHandlerContext ctx, ByteBuf msg) throws Exception {
-            //TODO
+        protected void channelRead0(ChannelHandlerContext ctx, byte[] msg) throws Exception {
+            if (!Arrays.equals(PONG, msg)) {
+                throw new IllegalArgumentException();
+            }
+            if (pingsLeft.getAndDecrement() > 0) {
+                ctx.channel().writeAndFlush(PING);
+            } else {
+                pingsLeft.incrementAndGet();
+            }
+
+            semaphore.release();
         }
     }
 
