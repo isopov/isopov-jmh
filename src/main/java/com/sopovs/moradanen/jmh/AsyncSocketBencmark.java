@@ -41,6 +41,23 @@ import java.util.concurrent.atomic.AtomicInteger;
 //AsyncSocketBencmark.ping      100  asyncHandlers  avgt   15  7668.647 ± 712.955  us/op
 //AsyncSocketBencmark.ping      100          netty  avgt   15  4980.081 ± 626.558  us/op
 
+//Windows on Desktop
+//Benchmark                 (pings)         (type)  Mode  Cnt     Score     Error  Units
+//AsyncSocketBencmark.ping        1       blocking  avgt   15    16,638 ±   1,798  us/op
+//AsyncSocketBencmark.ping        1          async  avgt   15    22,580 ±   0,725  us/op
+//AsyncSocketBencmark.ping        1  asyncHandlers  avgt   15    19,277 ±   1,081  us/op
+//AsyncSocketBencmark.ping        1          netty  avgt   15    41,107 ±   1,429  us/op
+//AsyncSocketBencmark.ping       10       blocking  avgt   15   170,164 ±  24,544  us/op
+//AsyncSocketBencmark.ping       10          async  avgt   15   227,543 ±   9,525  us/op
+//AsyncSocketBencmark.ping       10  asyncHandlers  avgt   15   174,062 ±  30,002  us/op
+//AsyncSocketBencmark.ping       10          netty  avgt   15   224,965 ±  25,093  us/op
+//AsyncSocketBencmark.ping      100       blocking  avgt   15  1558,272 ± 149,727  us/op
+//AsyncSocketBencmark.ping      100          async  avgt   15  2320,424 ±  79,510  us/op
+//AsyncSocketBencmark.ping      100  asyncHandlers  avgt   15  1570,477 ± 131,221  us/op
+//AsyncSocketBencmark.ping      100          netty  avgt   15  2211,000 ± 543,706  us/op
+
+
+
 @BenchmarkMode(Mode.AverageTime)
 @Fork(3)
 @OutputTimeUnit(TimeUnit.MICROSECONDS)
