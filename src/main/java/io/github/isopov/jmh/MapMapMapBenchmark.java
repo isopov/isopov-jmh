@@ -11,6 +11,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+
+@State(Scope.Thread)
 @BenchmarkMode(Mode.AverageTime)
 @Fork(3)
 @OutputTimeUnit(TimeUnit.MICROSECONDS)
@@ -62,11 +64,12 @@ public class MapMapMapBenchmark {
         void accept(int first, int second, int third, String value);
     }
 
-    private static final int FIRSTS = 100;
-    private static final int SECONDS = 10;
-    private static final int THIRDS = 10;
+    //not static, not final to prevent constant folding (see JMHSample_10_ConstantFold)
+    private int FIRSTS = 100;
+    private int SECONDS = 10;
+    private int THIRDS = 10;
 
-    private static void test(Tester tester) {
+    private void test(Tester tester) {
         for (int first = 0; first < FIRSTS; first++) {
             for (int second = 0; second < SECONDS; second++) {
                 for (int third = 0; third < THIRDS; third++) {
@@ -85,3 +88,8 @@ public class MapMapMapBenchmark {
         new Runner(opt).run();
     }
 }
+
+
+
+
+
